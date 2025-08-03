@@ -15,43 +15,45 @@
 #include <string.h>
 #include <stdlib.h>
 
+// Global constants
+const char *PGMExtension = ".pgm";
 
-int main() {
-
-    // 1. take input on image filename
+/* Gets input from the user, then returns a char pointer to the filename of the image to convert. */
+void getImageToConvert(char *fileName){
     printf("Enter the filename of the image to convert: ");
-    char ImageToConvertFilename[512];
-    scanf("%s", ImageToConvertFilename);
- 
-    // 2. generate command to convert to PGM
-    char PGMFilename[1024];
-    snprintf(PGMFilename, sizeof(PGMFilename), "%s.pgm", ImageToConvertFilename);
-
-    long originalFilenameLength;
-    char ConvertedPGMFileName[500];
-    char* PGMExtension = ".pgm";
+    scanf("%s", fileName);
+}
+/* Generates the Magick program command for generating a PGM file. Also generates the expected PGM output file name. */
+void *generatePGMConversionCommand(const char *ImageToConvertFilename, char *ConvertedPGMFileName, size_t convertedSize, char *pgmCommand, size_t commandSize){
+    // Find the file name up to its extension.
+    long originalFilenameLength = strlen(ImageToConvertFilename); 
     char* ExtensionStart = ".";
-    char* originalFileExtension;
-    int ExtensionLength;
-    int OriginalStemLength;
-    char convertToPGMCommand[500] = "";
-
-    originalFilenameLength = strlen(ImageToConvertFilename);
-    originalFileExtension = strstr(ImageToConvertFilename, ExtensionStart); // locates the first occurence of extensionStart
-    ExtensionLength = strlen(originalFileExtension);
-    OriginalStemLength = originalFilenameLength - ExtensionLength;
+    char* originalFileExtension = strstr(ImageToConvertFilename, ExtensionStart); // locates the first occurence of extensionStart
+    int ExtensionLength = strlen(originalFileExtension);
+    int OriginalStemLength = originalFilenameLength - ExtensionLength;
 
     // instantiate the ConvertedPGMFileName to the stem file.
     strncpy(ConvertedPGMFileName, ImageToConvertFilename, OriginalStemLength); // copy the file name up to "."
     ConvertedPGMFileName[OriginalStemLength] = '\0';
 
     // concatenate the .pgm extension to the ConvertedPGMFileName.
-    snprintf(ConvertedPGMFileName, sizeof(ConvertedPGMFileName), "%s%s", ConvertedPGMFileName, PGMExtension);
+    strncat(ConvertedPGMFileName, PGMExtension, convertedSize - strlen(ConvertedPGMFileName) - 1);
 
     //magick input.jpg -compress none -define pgm:format=plain output.pgm
-    snprintf(convertToPGMCommand,sizeof(convertToPGMCommand), "magick %s -resize 256x256\\! -compress none -define pgm:format=plain %s", ImageToConvertFilename, ConvertedPGMFileName);
+    snprintf(pgmCommand, commandSize, "magick %s -resize 256x256\\! -compress none -define pgm:format=plain %s", ImageToConvertFilename, ConvertedPGMFileName);
+}
 
-    printf("Running command \" %s \" to convert input into PM2. \n", convertToPGMCommand);
+int main() {
+    // 1. take input on image filename
+    char ImageToConvertFilename[512];
+    getImageToConvert(ImageToConvertFilename);
+    printf("Accessing file: %s\n", ImageToConvertFilename);
+
+    // 2. generate command to convert to PGM and store the PGM output file name.
+    char ConvertedPGMFileName[500] = "";
+    char convertToPGMCommand[500] = "";
+    generatePGMConversionCommand(ImageToConvertFilename, ConvertedPGMFileName, sizeof(ConvertedPGMFileName), convertToPGMCommand, sizeof(convertToPGMCommand));
+    printf("Running command \"%s\" to convert input into PM2. \n", convertToPGMCommand);
 
     // 3. execute command 
     int commandResult = system(convertToPGMCommand);
