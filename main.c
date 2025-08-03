@@ -49,13 +49,16 @@ int main() {
     snprintf(ConvertedPGMFileName, sizeof(ConvertedPGMFileName), "%s%s", ConvertedPGMFileName, PGMExtension);
 
     //magick input.jpg -compress none -define pgm:format=plain output.pgm
-    snprintf(convertToPGMCommand,sizeof(convertToPGMCommand), "magick %s -compress none -define pgm:format=plain %s", ImageToConvertFilename, ConvertedPGMFileName);
+    snprintf(convertToPGMCommand,sizeof(convertToPGMCommand), "magick %s -resize 256x256\\! -compress none -define pgm:format=plain %s", ImageToConvertFilename, ConvertedPGMFileName);
 
     printf("Running command \" %s \" to convert input into PM2. \n", convertToPGMCommand);
 
     // 3. execute command 
-    system(convertToPGMCommand); // add a check to ensure that the command is executed correctly.
-
+    int commandResult = system(convertToPGMCommand);
+    if (commandResult != 0) {
+        fprintf(stderr, "Error running conversion command.\n");
+        return 1;
+    }
 
     // // 4. Parse the PGM file to get the Height, Width and Scale.
 
@@ -77,9 +80,10 @@ int main() {
     for (int i = 0; i < 3; i++){
         fgets(line, sizeof(line), file);
         if (i == 0){
+            line[strcspn(line, "\n")] = '\0';
             if(!strcmp(expectedFileFormat, line)){
-                return 0;
                 printf("error, file is not in PM2 format");
+                return 0;
             }
         }
         if (i == 1){
@@ -91,7 +95,6 @@ int main() {
                 strcpy(Width, Width_temp);
                 Width[sizeof(Width)-1] = '\0';
             }
-            printf("Height = %s, Width = %s \n", Height, Width);
         }
         if (i == 2){
             char* s = strtok(line, "\n");
@@ -103,29 +106,64 @@ int main() {
         }
     }
 
-
-    fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
-    fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
-
     // getPGMHeader(PGMFilename, &height, &width, &scale);
 
     // // 5. to generate a 2D normalized integers between 0.0 and 1.0 reading the PGM file and using Height, Width and Scale.    
-    // float** normalizedGrid = generateNormalizedGrid(PGMFilename, height, width, scale);
+    // float** normalizedGrid = generateNormalizedGrid(PGMFilename, Height, Width, Scale);
+    
+    int height = atoi(Height);
+    int width = atoi(Width);
+    int scale = atoi(Scale);
 
-    // // 6. define type cell_s. 
-    // typedef struct {
-    //     int x;
-    //     int y;
-    //     int top_right;
-    //     int top_left;
-    //     int bottom_right;
-    //     int bottom_left;
-    // } cell_s;
+    float** normalizedGrid = malloc(height * sizeof(float*));
 
-    // // 7. generate a "cellGrid" (a 2D array of dimensions Height-1 and Width-1), where each item is a cell_s,
-    // cell_s cellGrid[height-1][width-1];
+    for (int i = 0; i < height; i++){
+        normalizedGrid[i] = malloc(width * sizeof(float));
+    }
 
-    // // 8. declare a function called getContouringCase that takes a cell_s and returns an array of SingleLineInstructions. Each SingleLineInstructions is a pair of X,Y offsets for 2 points.
+    char* pixel;
+    int j = 0;
+    int i = 0;
+    int pixelIndex = 0;
+
+    while (fgets(line,sizeof(line),file)){
+        pixel = strtok(line," \n");
+        while(pixel != NULL && pixelIndex < (height * width)){
+            i = pixelIndex / width;
+            j = pixelIndex % width;
+            
+            normalizedGrid[i][j] = atoi(pixel) / (float) scale;
+
+            pixel = strtok(NULL," \n");
+            pixelIndex++;
+        }
+    }
+
+
+    // for (int i = 0; i < height; i++){
+    //     for (int j = 0; j < width; j++) {
+    //         printf(" At index [%d][%d] there is value [%f]; ", i,j, normalizedGrid[i][j]);
+    //     }
+    // }
+
+
+    fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
+    fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
+    
+    // 6. define type cell_t. 
+    typedef struct {
+        int x;
+        int y;
+        int top_right;
+        int top_left;
+        int bottom_right;
+        int bottom_left;
+    } cell_t;
+
+    // // 7. generate a "cellGrid" (a 2D array of dimensions Height-1 and Width-1), where each item is a cell_t,
+    // cell_t cellGrid[height-1][width-1];
+
+    // // 8. declare a function called getContouringCase that takes a cell_t and returns an array of SingleLineInstructions. Each SingleLineInstructions is a pair of X,Y offsets for 2 points.
     // SingleLineInstructions* getContouringCase(cell_s cell);
 
     // // 9. Declare a function GenerateSingleLine that takes a struct SingleLineInstructions and a cell, it calculates the 2 points and adds a line to the svg file.
@@ -139,5 +177,10 @@ int main() {
 
     // // 12. rasterize a file with the svg layer on top of the png file. using magick's command: convert original_image.pgm contours.svg -layers composite output.png
     // void rasterize();
+
+    for (int i = 0; i < height; i++) free(normalizedGrid[i]);
+    free(normalizedGrid);
+
+    
     return 1;
 }
