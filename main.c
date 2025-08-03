@@ -51,15 +51,62 @@ int main() {
     //magick input.jpg -compress none -define pgm:format=plain output.pgm
     snprintf(convertToPGMCommand,sizeof(convertToPGMCommand), "magick %s -compress none -define pgm:format=plain %s", ImageToConvertFilename, ConvertedPGMFileName);
 
-    printf("%s", convertToPGMCommand);
+    printf("Running command \" %s \" to convert input into PM2. \n", convertToPGMCommand);
 
     // 3. execute command 
     system(convertToPGMCommand); // add a check to ensure that the command is executed correctly.
 
+
+    // // 4. Parse the PGM file to get the Height, Width and Scale.
+
+    
+    FILE *file = fopen(ConvertedPGMFileName, "r");
+
+    if (file == NULL){
+        return 0;
+        printf("Unable to open converted file %s.", ConvertedPGMFileName);
+    }
+    
+    char line[256];
+    char* expectedFileFormat = "PM2";
+    char* Height_temp;
+    char* Width_temp;
+    char Height[10];
+    char Width[10];
+    char Scale[10];
+    for (int i = 0; i < 3; i++){
+        fgets(line, sizeof(line), file);
+        if (i == 0){
+            if(!strcmp(expectedFileFormat, line)){
+                return 0;
+                printf("error, file is not in PM2 format");
+            }
+        }
+        if (i == 1){
+            Height_temp = strtok(line, " ");
+            Width_temp = strtok(NULL,"\n");
+            if(Height_temp && Width_temp){
+                strcpy(Height, Height_temp);
+                Height[sizeof(Height)-1] = '\0';
+                strcpy(Width, Width_temp);
+                Width[sizeof(Width)-1] = '\0';
+            }
+            printf("Height = %s, Width = %s \n", Height, Width);
+        }
+        if (i == 2){
+            char* s = strtok(line, "\n");
+            if(s){
+                strncpy(Scale,s,sizeof(Scale) - 1);
+                Scale[sizeof(Scale) - 1] = '\0';
+            }
+            printf("Height = %s, Width = %s, Scale = %s \n", Height, Width, Scale);
+        }
+    }
+
+
     fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
     fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
 
-    // // 4. Parse the PGM file to get the Height, Width and Scale.
     // getPGMHeader(PGMFilename, &height, &width, &scale);
 
     // // 5. to generate a 2D normalized integers between 0.0 and 1.0 reading the PGM file and using Height, Width and Scale.    
