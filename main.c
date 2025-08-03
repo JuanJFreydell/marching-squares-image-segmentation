@@ -37,12 +37,12 @@ int main() {
     char convertToPGMCommand[500] = "";
 
     originalFilenameLength = strlen(ImageToConvertFilename);
-    originalFileExtension = strstr(ImageToConvertFilename, ExtensionStart);
+    originalFileExtension = strstr(ImageToConvertFilename, ExtensionStart); // locates the first occurence of extensionStart
     ExtensionLength = strlen(originalFileExtension);
     OriginalStemLength = originalFilenameLength - ExtensionLength;
 
     // instantiate the ConvertedPGMFileName to the stem file.
-    strncpy(ConvertedPGMFileName, ImageToConvertFilename, OriginalStemLength);
+    strncpy(ConvertedPGMFileName, ImageToConvertFilename, OriginalStemLength); // copy the file name up to "."
     ConvertedPGMFileName[OriginalStemLength] = '\0';
 
     // concatenate the .pgm extension to the ConvertedPGMFileName.
@@ -61,8 +61,6 @@ int main() {
     }
 
     // 4. Parse the PGM file to get the Height, Width and Scale.
-
-    
     FILE *file = fopen(ConvertedPGMFileName, "r");
 
     if (file == NULL){
@@ -79,13 +77,15 @@ int main() {
     char Scale[10];
     for (int i = 0; i < 3; i++){
         fgets(line, sizeof(line), file);
+        // For the header, check that the file format is P2.
         if (i == 0){
-            line[strcspn(line, "\n")] = '\0';
+            line[strcspn(line, "\n")] = '\0'; // Replace any newline char with a terminal char.
             if(!strcmp(expectedFileFormat, line)){
                 printf("error, file is not in PM2 format");
                 return 0;
             }
         }
+        // For the second row, the number of columns is listed, then the number of rows.
         if (i == 1){
             Height_temp = strtok(line, " ");
             Width_temp = strtok(NULL,"\n");
@@ -96,6 +96,7 @@ int main() {
                 Width[sizeof(Width)-1] = '\0';
             }
         }
+        // For the third row, get the scale (the maximum value of a pixel).
         if (i == 2){
             char* s = strtok(line, "\n");
             if(s){
@@ -128,8 +129,8 @@ int main() {
     while (fgets(line,sizeof(line),file)){
         pixel = strtok(line," \n");
         while(pixel != NULL && pixelIndex < (height * width)){
-            i = pixelIndex / width;
-            j = pixelIndex % width;
+            i = pixelIndex / width; // rows
+            j = pixelIndex % width; // columns
             
             normalizedGrid[i][j] = atoi(pixel) / (float) scale;
 
