@@ -23,6 +23,31 @@ void getImageToConvert(char *fileName){
     printf("Enter the filename of the image to convert: ");
     scanf("%s", fileName);
 }
+
+/* A debugging helper function to capture the normalized grid as a text file. */
+int writeNormalizedGridToTxt(char *ConvertedPGMFileName, float** normalizedGrid, int height, int width){
+    // Create the file name with the PGM filename
+    char normalizedGridFileName[500]= "";
+    strcat(normalizedGridFileName, ConvertedPGMFileName);
+    strcat(normalizedGridFileName, "NormalizedGrid.txt");
+    // Open the file and write to it.
+    FILE *file = fopen(normalizedGridFileName, "w"); 
+    if (file == NULL) {
+        printf("Error opening file");
+        return 1;
+    }
+
+    for (int i = 0; i < height; i++){
+        fprintf(file, "[");
+        for (int j = 0; j < width; j++) {
+            fprintf(file, " %.0f ", normalizedGrid[i][j]);
+        }
+        fprintf(file, "]\n");
+    }
+    fclose(file);
+    return 0;
+}
+
 /* Generates the Magick program command for generating a PGM file. Also generates the expected PGM output file name. */
 void *generatePGMConversionCommand(const char *ImageToConvertFilename, char *ConvertedPGMFileName, size_t convertedSize, char *pgmCommand, size_t commandSize){
     // Find the file name up to its extension.
@@ -141,12 +166,8 @@ int main() {
         }
     }
 
-    // // Printing Normalized Grid
-    // for (int i = 0; i < height; i++){
-    //     for (int j = 0; j < width; j++) {
-    //         printf(" At index [%d][%d] there is value [%f]; ", i,j, normalizedGrid[i][j]);
-    //     }
-    // }
+    // Captures the normalized grid as txt values and outputs a txt file of it.
+    int writeFile = writeNormalizedGridToTxt(ConvertedPGMFileName, normalizedGrid, height, width);
 
     // 6. define type cell_t. 
     typedef struct {
