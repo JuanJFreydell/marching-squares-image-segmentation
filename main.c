@@ -60,7 +60,7 @@ int main() {
         return 1;
     }
 
-    // // 4. Parse the PGM file to get the Height, Width and Scale.
+    // 4. Parse the PGM file to get the Height, Width and Scale.
 
     
     FILE *file = fopen(ConvertedPGMFileName, "r");
@@ -108,8 +108,7 @@ int main() {
 
     // getPGMHeader(PGMFilename, &height, &width, &scale);
 
-    // // 5. to generate a 2D normalized integers between 0.0 and 1.0 reading the PGM file and using Height, Width and Scale.    
-    // float** normalizedGrid = generateNormalizedGrid(PGMFilename, Height, Width, Scale);
+    // 5. to generate a 2D normalized integers between 0.0 and 1.0 reading the PGM file and using Height, Width and Scale.    
     
     int height = atoi(Height);
     int width = atoi(Width);
@@ -139,17 +138,13 @@ int main() {
         }
     }
 
-
+    // // Printing Normalized Grid
     // for (int i = 0; i < height; i++){
     //     for (int j = 0; j < width; j++) {
     //         printf(" At index [%d][%d] there is value [%f]; ", i,j, normalizedGrid[i][j]);
     //     }
     // }
 
-
-    fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
-    fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
-    
     // 6. define type cell_t. 
     typedef struct {
         int x;
@@ -160,8 +155,12 @@ int main() {
         int bottom_left;
     } cell_t;
 
-    // // 7. generate a "cellGrid" (a 2D array of dimensions Height-1 and Width-1), where each item is a cell_t,
-    // cell_t cellGrid[height-1][width-1];
+    // 7. generate a "cellGrid" (a 2D array of dimensions Height-1 and Width-1), where each item is a cell_t,
+    cell_t** cellGrid = malloc((height -1)* sizeof(cell_t*));
+
+    for (int i = 0; i < height; i++){
+        cellGrid[i] = malloc((width -1) * sizeof(cell_t));
+    }
 
     // // 8. declare a function called getContouringCase that takes a cell_t and returns an array of SingleLineInstructions. Each SingleLineInstructions is a pair of X,Y offsets for 2 points.
     // SingleLineInstructions* getContouringCase(cell_s cell);
@@ -181,6 +180,11 @@ int main() {
     for (int i = 0; i < height; i++) free(normalizedGrid[i]);
     free(normalizedGrid);
 
-    
+    for (int i = 0; i < height - 1; i++) free(cellGrid[i]);
+    free(cellGrid);
+
+    fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
+    fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
+
     return 1;
 }
