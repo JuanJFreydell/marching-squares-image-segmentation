@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 
 int main() {
@@ -29,7 +30,6 @@ int main() {
     long originalFilenameLength;
     char ConvertedPGMFileName[500];
     char* PGMExtension = ".pgm";
-    char* magickCommand = "magick";
     char* ExtensionStart = ".";
     char* originalFileExtension;
     int ExtensionLength;
@@ -48,18 +48,16 @@ int main() {
     // concatenate the .pgm extension to the ConvertedPGMFileName.
     snprintf(ConvertedPGMFileName, sizeof(ConvertedPGMFileName), "%s%s", ConvertedPGMFileName, PGMExtension);
 
-    snprintf(convertToPGMCommand,sizeof(convertToPGMCommand), "%s %s %s", magickCommand, ImageToConvertFilename, ConvertedPGMFileName);
+    //magick input.jpg -compress none -define pgm:format=plain output.pgm
+    snprintf(convertToPGMCommand,sizeof(convertToPGMCommand), "magick %s -compress none -define pgm:format=plain %s", ImageToConvertFilename, ConvertedPGMFileName);
 
     printf("%s", convertToPGMCommand);
 
-    fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
-    fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
+    // 3. execute command 
+    system(convertToPGMCommand); // add a check to ensure that the command is executed correctly.
 
-    // printf();
-    // char* command = generatePMGConversionCommand(ImageToConvertFilename, PGMFilename); // this can be done inline;
-    
-    // // 3. execute command 
-    // system(command); // add a check to ensure that the command is executed correctly.
+    fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
+    fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
 
     // // 4. Parse the PGM file to get the Height, Width and Scale.
     // getPGMHeader(PGMFilename, &height, &width, &scale);
