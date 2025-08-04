@@ -16,8 +16,22 @@
 #include <stdlib.h>
 
 // Global constants
+#define THRESHOLD 0.5
 const char *PGMExtension = ".pgm";
 const char* expectedFileFormat = "PM2";
+
+/* A contouring cell which represents the value based on its 4 corners. */
+typedef struct {
+    int x;
+    int y;
+    // Values listed from most significant to least significant bit (clockwise from top left)
+    int top_left;
+    int top_right;
+    int bottom_right;
+    int bottom_left;
+    // Binary index
+    int caseValue;
+} cell_t;
 
 /* Gets input from the user, then returns a char pointer to the filename of the image to convert. */
 void getImageToConvert(char *fileName){
@@ -25,12 +39,13 @@ void getImageToConvert(char *fileName){
     scanf("%s", fileName);
 }
 
-/* A debugging helper function to capture the normalized grid as a text file. */
+/* A debugging helper function to capture the normalized grid as a text file. Formatted to 3 decimal places. */
 int writeNormalizedGridToTxt(char *fileStem, float** normalizedGrid, int height, int width){
     // Create the file name with the PGM filename
     char normalizedGridFileName[500]= "";
     strcat(normalizedGridFileName, fileStem);
     strcat(normalizedGridFileName, "-NormalizedGrid.txt");
+    
     // Open the file and write to it.
     FILE *file = fopen(normalizedGridFileName, "w"); 
     if (file == NULL) {
@@ -41,7 +56,64 @@ int writeNormalizedGridToTxt(char *fileStem, float** normalizedGrid, int height,
     for (int i = 0; i < height; i++){
         fprintf(file, "[");
         for (int j = 0; j < width; j++) {
-            fprintf(file, " %.0f ", normalizedGrid[i][j]);
+            fprintf(file, " %.3f ", normalizedGrid[i][j]);
+        }
+        fprintf(file, "]\n");
+    }
+    fclose(file);
+    return 0;
+}
+
+/* A debugging helper function to capture the normalized grid with a threshold applied so that 0 or 1 are now the possible values. Saved as a text file. */
+int writeThresholdGridToTxt(char *fileStem, float** normalizedGrid, int height, int width){
+    // Create the file name with the PGM filename
+    char normalizedGridFileName[500]= "";
+    strcat(normalizedGridFileName, fileStem);
+    strcat(normalizedGridFileName, "-NormalizedGridwithThreshold.txt");
+    
+    // Open the file and write to it.
+    FILE *file = fopen(normalizedGridFileName, "w"); 
+    if (file == NULL) {
+        printf("Error opening file");
+        return 1;
+    }
+
+    for (int i = 0; i < height; i++){
+        fprintf(file, "[");
+        for (int j = 0; j < width; j++) {
+            fprintf(file, " %d ", (normalizedGrid[i][j] > THRESHOLD? 1 : 0));
+        }
+        fprintf(file, "]\n");
+    }
+    fclose(file);
+    return 0;
+}
+
+
+/* A debugging helper function to capture the contour cell grid as a text file. */
+int writeContourGridToTxt(char *fileStem, cell_t** contourGrid, int height, int width){
+    // Create the file name with the PGM filename
+    char contourGridFileName[500]= "";
+    strcat(contourGridFileName, fileStem);
+    strcat(contourGridFileName, "-ContourCellGrid.txt");
+    
+    // Open the file and write to it.
+    FILE *file = fopen(contourGridFileName, "w"); 
+    if (file == NULL) {
+        printf("Error opening file");
+        return 1;
+    }
+
+    for (int i = 0; i < height; i++){
+        fprintf(file, "[");
+        for (int j = 0; j < width; j++) {
+            cell_t temp = contourGrid[j][i];
+            int tempCaseVal = temp.caseValue;
+            fprintf(file, " %d ", tempCaseVal);
+            // Print another space if the caseValue is a single digit, to keep formatting consistent.
+            if(tempCaseVal < 10){
+                fprintf(file, " ");
+            }
         }
         fprintf(file, "]\n");
     }
@@ -84,8 +156,8 @@ int executePGMCommand(char *convertToPGMCommand){
 void parsePGMFile(char *ConvertedPGMFileName, int *height, int *width, int *scale){
     FILE *file = fopen(ConvertedPGMFileName, "r");
     if (file == NULL){
-        return 0;
         printf("Unable to open converted file %s.", ConvertedPGMFileName);
+        return;
     }
     
     char heightStr[10] = "";
@@ -173,6 +245,54 @@ float **generateNormalizedGrid(char *ConvertedPGMFileName, int height, int width
     return normalizedGrid;
 }
 
+/* Helper function used in fillCellGrid to calculate a binary index based on the corners of the cell. 
+    The bit 0 or 1 shifted:
+        3 => binary 1000 => decimal 2^3 = 8
+        2 => binary 100 => decimal 2^2 = 4
+        1 => binary 10 => 2^1 = 2
+        0 (no shift) => binary 1 => decimal 1
+*/
+int calculateBinaryIndex(int top_left, int top_right, int bottom_right, int bottom_left){
+    int finalValue = (top_left << 3) + (top_right << 2) + (bottom_right << 1) + (bottom_left << 0);
+    return finalValue;
+}
+
+/* Fills the contour cell grid. */
+void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGridHeight, int cellGridWeight){
+    // Set indexes to traverse and access the normalizedGrid. This starts at the top_left corner of each cell.
+    int nRow = 0;
+
+    for(int row = 0; row < cellGridHeight; row++){
+        int nCol = 0; // reset to 0 after each row.
+        for(int col = 0; col < cellGridWeight; col++){
+            int x = col;
+            int y = row;
+
+            // Apply threshold and calculate values.
+            int top_left = (normalizedGrid[nRow][nCol] >= THRESHOLD? 1 : 0);
+            int top_right = (normalizedGrid[nRow][(nCol+1)] >= THRESHOLD? 1 : 0);
+            int bottom_right = (normalizedGrid[(nRow+1)][nCol] >= THRESHOLD? 1 : 0);
+            int bottom_left = (normalizedGrid[(nRow+1)][(nCol+1)] >= THRESHOLD? 1 : 0);
+
+            int caseValue = calculateBinaryIndex(top_left, top_right, bottom_right, bottom_left);
+            cell_t cell = {x, y, top_left, top_right, bottom_right, bottom_left, caseValue};
+            contourCellGrid[col][row] = cell;
+            nCol++;
+        }
+        nRow++;
+    }
+}
+
+/* A instruction for a single line, with [x1, y1] as the start point and [x2, y2] as the end point. */
+typedef struct SingleLineInstruction_t{
+    float x1, y1;  // start point
+    float x2, y2;  // end point
+} SingleLineInstruction;
+
+SingleLineInstruction* getContouringCase(cell_t cell){
+
+}
+
 int main() {
     // 1. take input on image filename
     char ImageToConvertFilename[512];
@@ -200,27 +320,32 @@ int main() {
     float** normalizedGrid = generateNormalizedGrid(ConvertedPGMFileName, height, width, scale); 
 
     // Captures the normalized grid as txt values and outputs a txt file of it.
-    int writeFile = writeNormalizedGridToTxt(fileStem, normalizedGrid, height, width);
+    int writeNGridFile = writeNormalizedGridToTxt(fileStem, normalizedGrid, height, width);
 
-    // 6. define type cell_t. 
-    typedef struct {
-        int x;
-        int y;
-        int top_right;
-        int top_left;
-        int bottom_right;
-        int bottom_left;
-    } cell_t;
+    // Capture the grid with the threshold applied (visuatlization using integers)
+    int writeThresholdNGridFile = writeThresholdGridToTxt(fileStem, normalizedGrid, height, width);
 
-    // 7. generate a "cellGrid" (a 2D array of dimensions Height-1 and Width-1), where each item is a cell_t,
-    cell_t** cellGrid = malloc((height -1)* sizeof(cell_t*));
+    // 6. define type cell_t. - defined above
 
-    for (int i = 0; i < height; i++){
-        cellGrid[i] = malloc((width -1) * sizeof(cell_t));
+    // 7. generate a "cellGrid" (a 2D array of dimensions Height-1 and Width-1), where each item is a cell_t.
+    int contourGridHeight = height-1;
+    int contourGridWidth = width-1;
+    cell_t** cellGrid = malloc((contourGridWidth)* sizeof(cell_t*));
+    for (int row = 0; row < height; row++){
+        cellGrid[row] = malloc((contourGridHeight) * sizeof(cell_t));
     }
 
-    // // 8. declare a function called getContouringCase that takes a cell_t and returns an array of SingleLineInstructions. Each SingleLineInstructions is a pair of X,Y offsets for 2 points.
-    // SingleLineInstructions* getContouringCase(cell_s cell);
+    // Using the normalized grid values, fill the values of the cell grid with each cell's calculated case value. The case value is a bit number calculated from the number of true/false corners.
+    fillCellGrid(normalizedGrid, cellGrid, contourGridHeight, contourGridWidth);
+    int writeCGridFile = writeContourGridToTxt(fileStem, cellGrid, contourGridHeight, contourGridWidth); // prints the binaryIndex values.
+    
+    // 8. declare a function called getContouringCase that takes a cell_t and returns an array of SingleLineInstructions. Each SingleLineInstructions is a pair of X,Y offsets for 2 points. => Interpolation.
+    // for(int i = 0; i < contourCellHeight; i++){
+    //     for(int j = 0; j < contourCellWidth; j++){
+    //         cell_t cell = cellGrid[i][j];
+    //         SingleLineInstruction sli = getContouringCase(cell);
+    //     }
+    // }
 
     // // 9. Declare a function GenerateSingleLine that takes a struct SingleLineInstructions and a cell, it calculates the 2 points and adds a line to the svg file.
     // void GenerateSingleLine(LineInstructions lineInstructions, cell_s cell);
@@ -245,3 +370,5 @@ int main() {
 
     return 1;
 }
+
+// single getContouringCase(cell_t cell)
