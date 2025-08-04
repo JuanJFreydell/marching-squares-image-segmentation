@@ -6,66 +6,6 @@
 // Definition of global variables
 const char *PGMExtension = ".pgm";
 const char *expectedFileFormat = "PM2";
-/* Visualization of SLI points
-    (0,0)   midTop        (1,0)
-         *-------*------*
-         |              |
-midLeft  *              * midRight
-         |              |
-         *-------*------*
-  (0,-1)      midBtm     (1,-1)
-*/
-const Point midTop = {0.5, 0};
-const Point midLeft = {0, -0.5};
-const Point midRight = {1, -0.5};
-const Point midBottom = {0.5, -1};
-
-// // TODO
-void initializeLookupTable(Case *lookupTable){
-    Case case0 = {0};
-    lookupTable[0] = case0;
-
-    // SingleLineInstruction instructionsCase1 = {midLeft, midBottom};
-    // Case case1 = {1, instructionsCase1};
-
-    // Case case2 = {1};
-    // SingleLineInstruction instructionsCase2[] = {midRight, midBottom};
-    // Case case3 = {1};
-    // SingleLineInstruction instructionsCase3[] = {midRight, midBottom};
-    // Case case4 = {1};
-    // SingleLineInstruction instructionsCase4[] = {midRight, midBottom};
-    // Case case5 = {2};
-    // SingleLineInstruction instructionsCase5[] = {midRight, midBottom};
-    // Case case6 = {1};
-    // SingleLineInstruction instructionsCase6[] = {midRight, midBottom};
-    // Case case7 = {1};
-    // SingleLineInstruction instructionsCase7[] = {midRight, midBottom};
-    // Case case8 = {1};
-    // SingleLineInstruction instructionsCase8[] = {midRight, midBottom};
-    // Case case9 = {1};
-    // SingleLineInstruction instructionsCase9[] = {midRight, midBottom};
-    // Case case10 = {2};
-    // SingleLineInstruction instructionsCase10[] = {midRight, midBottom};
-    // Case case11 = {1};
-    // SingleLineInstruction instructionsCase11[] = {midRight, midBottom};
-    // Case case12 = {1};
-    // SingleLineInstruction instructionsCase12[] = {midRight, midBottom};
-    // Case case13 = {1};
-    // SingleLineInstruction instructionsCase13[] = {midRight, midBottom};
-    // Case case14 = {1};
-    // SingleLineInstruction instructionsCase14[] = {midRight, midBottom};
-
-    Case case15 = {0};
-    lookupTable[15] = case15;
-    
-}
-
-// // TODO
-// SingleLineInstruction **getContouringCase(cell_t cell){
-//     int caseIndex = cell.caseValue;
-
-//     return ;
-// }
 
 void getImageToConvert(char *fileName){
     printf("Enter the filename of the image to convert: ");

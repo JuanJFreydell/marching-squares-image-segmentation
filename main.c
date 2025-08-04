@@ -69,7 +69,12 @@ int main() {
     // for(int i = 0; i < contourGridHeight; i++){
     //     for(int j = 0; j < contourGridWidth; j++){
     //         cell_t cell = cellGrid[i][j];
-    //         SingleLineInstruction **sliArray = getContouringCase(cell);
+    //         Case *cellCasePtr = getContouringCase(cell);
+    //         int numberOfLines = cellCasePtr->numOfLines;
+    //         cellCasePtr->sliArray
+    //         for(int k = 0; k = numberOfLines; k++){
+    //             drawLine();
+    //         }
     //     }
     // }
 
