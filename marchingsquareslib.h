@@ -3,11 +3,10 @@
 #ifndef MARCHINGSQUARESLIB_H
 #define MARCHINGSQUARESLIB_H
 
-
 // Global constants
 #define THRESHOLD 0.5
 #define MAX_SINGLE_LINE_INSTRUCTIONS 2
-#define NUM_OF_CONTOUR_CASES 16; // 0 through 15
+#define NUM_OF_CONTOUR_CASES 16 // 0 through 15
 extern const char *PGMExtension;
 extern const char *expectedFileFormat;
 
@@ -25,9 +24,15 @@ typedef struct {
     int caseValue;
 } cell_t;
 
+/* A point used in a single line instruction. */
+typedef struct SLIPoint_t{
+    float x, y;
+} Point;
+
 /* An instruction for a single line, with x and y offsets. Each case may have 0, 1 or 2 of these. */
 typedef struct SingleLineInstruction_t{
-    float xOffset, yOffset;
+    Point point1;
+    Point point2;
 } SingleLineInstruction;
 
 /* A case has 0, 1, or 2 single line instructions mapped to it. */

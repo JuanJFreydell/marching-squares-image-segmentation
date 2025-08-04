@@ -63,13 +63,13 @@ int main() {
     int writeCGridFile = writeContourGridToTxt(fileStem, cellGrid, contourGridHeight, contourGridWidth); // prints the binaryIndex values.
     
     // 8. declare a function called getContouringCase that takes a cell_t and returns an array of SingleLineInstructions. Each SingleLineInstructions is a pair of X,Y offsets for 2 points.
-    // Initialize the lookup table for the contouring cases.
-    // Case **lookupTable = malloc((NUM_OF_CONTOUR_CASES) * sizeof(Case*));
+    // // Initialize the lookup table for the contouring cases.
+    // Case **lookupTable = malloc(NUM_OF_CONTOUR_CASES * sizeof(Case*));
     // initializeLookupTable(lookupTable);
     // for(int i = 0; i < contourGridHeight; i++){
     //     for(int j = 0; j < contourGridWidth; j++){
     //         cell_t cell = cellGrid[i][j];
-    //         // SingleLineInstruction sli = getContouringCase(cell);
+    //         SingleLineInstruction **sliArray = getContouringCase(cell);
     //     }
     // }
 
