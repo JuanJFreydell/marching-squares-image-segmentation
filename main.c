@@ -17,6 +17,7 @@
 
 // Global constants
 const char *PGMExtension = ".pgm";
+const char* expectedFileFormat = "PM2";
 
 /* Gets input from the user, then returns a char pointer to the filename of the image to convert. */
 void getImageToConvert(char *fileName){
@@ -25,11 +26,11 @@ void getImageToConvert(char *fileName){
 }
 
 /* A debugging helper function to capture the normalized grid as a text file. */
-int writeNormalizedGridToTxt(char *ConvertedPGMFileName, float** normalizedGrid, int height, int width){
+int writeNormalizedGridToTxt(char *fileStem, float** normalizedGrid, int height, int width){
     // Create the file name with the PGM filename
     char normalizedGridFileName[500]= "";
-    strcat(normalizedGridFileName, ConvertedPGMFileName);
-    strcat(normalizedGridFileName, "NormalizedGrid.txt");
+    strcat(normalizedGridFileName, fileStem);
+    strcat(normalizedGridFileName, "-NormalizedGrid.txt");
     // Open the file and write to it.
     FILE *file = fopen(normalizedGridFileName, "w"); 
     if (file == NULL) {
@@ -49,7 +50,7 @@ int writeNormalizedGridToTxt(char *ConvertedPGMFileName, float** normalizedGrid,
 }
 
 /* Generates the Magick program command for generating a PGM file. Also generates the expected PGM output file name. */
-void *generatePGMConversionCommand(const char *ImageToConvertFilename, char *ConvertedPGMFileName, size_t convertedSize, char *pgmCommand, size_t commandSize){
+void *generatePGMConversionCommand(const char *ImageToConvertFilename, char *ConvertedPGMFileName, size_t convertedSize, char *pgmCommand, size_t commandSize, char *fileStem, size_t fileStemSize){
     // Find the file name up to its extension.
     long originalFilenameLength = strlen(ImageToConvertFilename); 
     char* ExtensionStart = ".";
@@ -60,6 +61,7 @@ void *generatePGMConversionCommand(const char *ImageToConvertFilename, char *Con
     // instantiate the ConvertedPGMFileName to the stem file.
     strncpy(ConvertedPGMFileName, ImageToConvertFilename, OriginalStemLength); // copy the file name up to "."
     ConvertedPGMFileName[OriginalStemLength] = '\0';
+    strncpy(fileStem, ConvertedPGMFileName, OriginalStemLength + 1);
 
     // concatenate the .pgm extension to the ConvertedPGMFileName.
     strncat(ConvertedPGMFileName, PGMExtension, convertedSize - strlen(ConvertedPGMFileName) - 1);
@@ -68,92 +70,93 @@ void *generatePGMConversionCommand(const char *ImageToConvertFilename, char *Con
     snprintf(pgmCommand, commandSize, "magick %s -resize 256x256\\! -compress none -define pgm:format=plain %s", ImageToConvertFilename, ConvertedPGMFileName);
 }
 
-int main() {
-    // 1. take input on image filename
-    char ImageToConvertFilename[512];
-    getImageToConvert(ImageToConvertFilename);
-    printf("Accessing file: %s\n", ImageToConvertFilename);
-
-    // 2. generate command to convert to PGM and store the PGM output file name.
-    char ConvertedPGMFileName[500] = "";
-    char convertToPGMCommand[500] = "";
-    generatePGMConversionCommand(ImageToConvertFilename, ConvertedPGMFileName, sizeof(ConvertedPGMFileName), convertToPGMCommand, sizeof(convertToPGMCommand));
-    printf("Running command \"%s\" to convert input into PM2. \n", convertToPGMCommand);
-
-    // 3. execute command 
-    int commandResult = system(convertToPGMCommand);
-    if (commandResult != 0) {
+/* Executes the PGM command. */
+int executePGMCommand(char *convertToPGMCommand){
+    int success = system(convertToPGMCommand);
+    if (success != 0) {
         fprintf(stderr, "Error running conversion command.\n");
         return 1;
     }
+    return success;
+}
 
-    // 4. Parse the PGM file to get the Height, Width and Scale.
+/* Parses the PGM file to get the Height, Width and Scale. */
+void parsePGMFile(char *ConvertedPGMFileName, int *height, int *width, int *scale){
     FILE *file = fopen(ConvertedPGMFileName, "r");
-
     if (file == NULL){
         return 0;
         printf("Unable to open converted file %s.", ConvertedPGMFileName);
     }
     
+    char heightStr[10] = "";
+    char widthStr[10] = "";
+    char scaleStr[10] = "";
+
     char line[256];
-    char* expectedFileFormat = "PM2";
-    char* Height_temp;
-    char* Width_temp;
-    char Height[10];
-    char Width[10];
-    char Scale[10];
+    char* height_temp;
+    char* width_temp;
     for (int i = 0; i < 3; i++){
         fgets(line, sizeof(line), file);
         // For the header, check that the file format is P2.
         if (i == 0){
             line[strcspn(line, "\n")] = '\0'; // Replace any newline char with a terminal char.
             if(!strcmp(expectedFileFormat, line)){
-                printf("error, file is not in PM2 format");
+                printf("error, file is not in P2 format");
                 return 0;
             }
         }
         // For the second row, the number of columns is listed, then the number of rows.
         if (i == 1){
-            Height_temp = strtok(line, " ");
-            Width_temp = strtok(NULL,"\n");
-            if(Height_temp && Width_temp){
-                strcpy(Height, Height_temp);
-                Height[sizeof(Height)-1] = '\0';
-                strcpy(Width, Width_temp);
-                Width[sizeof(Width)-1] = '\0';
+            height_temp = strtok(line, " ");
+            width_temp = strtok(NULL,"\n");
+            if(height_temp && width_temp){
+                strcpy(heightStr, height_temp);
+                heightStr[sizeof(heightStr)-1] = '\0';
+                strcpy(widthStr, width_temp);
+                widthStr[sizeof(widthStr)-1] = '\0';
             }
         }
         // For the third row, get the scale (the maximum value of a pixel).
         if (i == 2){
             char* s = strtok(line, "\n");
             if(s){
-                strncpy(Scale,s,sizeof(Scale) - 1);
-                Scale[sizeof(Scale) - 1] = '\0';
-            }
-            printf("Height = %s, Width = %s, Scale = %s \n", Height, Width, Scale);
+                strncpy(scaleStr,s, sizeof(scaleStr) - 1);
+                scaleStr[sizeof(scaleStr) - 1] = '\0';
+            }   
         }
     }
+    fclose(file);
 
-    // getPGMHeader(PGMFilename, &height, &width, &scale);
+    *height = atoi(heightStr);
+    *width = atoi(widthStr);
+    *scale = atoi(scaleStr);
+}
 
-    // 5. to generate a 2D normalized integers between 0.0 and 1.0 reading the PGM file and using Height, Width and Scale.    
-    
-    int height = atoi(Height);
-    int width = atoi(Width);
-    int scale = atoi(Scale);
-
-    float** normalizedGrid = malloc(height * sizeof(float*));
-
+/* Generates a dynamically-allocated 2D array. */
+float **generateNormalizedGrid(char *ConvertedPGMFileName, int height, int width, int scale){
+    // Malloc the grid's rows and columns.
+    float **normalizedGrid = malloc(height * sizeof(float*));
     for (int i = 0; i < height; i++){
         normalizedGrid[i] = malloc(width * sizeof(float));
     }
 
+    // Open the file and skip the first 3 rows (the header has already been parsed.)
+    FILE *file = fopen(ConvertedPGMFileName, "r");
+    if (file == NULL){
+        return 0;
+        printf("Unable to open converted file %s.", ConvertedPGMFileName);
+    }
+    char line[256];
+    for (int skip = 0; skip < 3; skip++){
+        fgets(line, sizeof(line), file);
+    }
+
+    // Calculate the normalized pixel values for the grid and fill the grid.
     char* pixel;
     int j = 0;
     int i = 0;
     int pixelIndex = 0;
-
-    while (fgets(line,sizeof(line),file)){
+    while (fgets(line,sizeof(line), file)){
         pixel = strtok(line," \n");
         while(pixel != NULL && pixelIndex < (height * width)){
             i = pixelIndex / width; // rows
@@ -165,9 +168,39 @@ int main() {
             pixelIndex++;
         }
     }
+    fclose(file);
+
+    return normalizedGrid;
+}
+
+int main() {
+    // 1. take input on image filename
+    char ImageToConvertFilename[512];
+    getImageToConvert(ImageToConvertFilename);
+    printf("Accessing file: %s\n", ImageToConvertFilename);
+
+    // 2. generate command to convert to PGM and store the PGM output file name. Also captures the file stem name.
+    char ConvertedPGMFileName[500] = "";
+    char convertToPGMCommand[500] = "";
+    char fileStem[500] = "";
+    generatePGMConversionCommand(ImageToConvertFilename, ConvertedPGMFileName, sizeof(ConvertedPGMFileName), convertToPGMCommand, sizeof(convertToPGMCommand), fileStem, sizeof(fileStem));
+    printf("Running command \"%s\" to convert input into PM2. \n", convertToPGMCommand);
+
+    // 3. execute command 
+    int commandResult = executePGMCommand(convertToPGMCommand);
+
+    // 4. Parse the PGM file to get the Height, Width and Scale from its header.
+    int height = 0;
+    int width = 0;
+    int scale = 0;
+    parsePGMFile(ConvertedPGMFileName, &height, &width, &scale);
+    printf("Height = %d, Width = %d, Scale = %d \n", height, width, scale);
+
+    // 5. Parse the remainder of the PGM file to generate a 2D array of normalized pixel values (as floats) between 0.0 and 1.0, using Height, Width and Scale.    
+    float** normalizedGrid = generateNormalizedGrid(ConvertedPGMFileName, height, width, scale); 
 
     // Captures the normalized grid as txt values and outputs a txt file of it.
-    int writeFile = writeNormalizedGridToTxt(ConvertedPGMFileName, normalizedGrid, height, width);
+    int writeFile = writeNormalizedGridToTxt(fileStem, normalizedGrid, height, width);
 
     // 6. define type cell_t. 
     typedef struct {
