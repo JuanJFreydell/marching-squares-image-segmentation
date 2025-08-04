@@ -122,7 +122,7 @@ int writeContourGridToTxt(char *fileStem, cell_t** contourGrid, int height, int 
 }
 
 /* Generates the Magick program command for generating a PGM file. Also generates the expected PGM output file name. */
-void *generatePGMConversionCommand(const char *ImageToConvertFilename, char *ConvertedPGMFileName, size_t convertedSize, char *pgmCommand, size_t commandSize, char *fileStem, size_t fileStemSize){
+void generatePGMConversionCommand(const char *ImageToConvertFilename, char *ConvertedPGMFileName, size_t convertedSize, char *pgmCommand, size_t commandSize, char *fileStem, size_t fileStemSize){
     // Find the file name up to its extension.
     long originalFilenameLength = strlen(ImageToConvertFilename); 
     char* ExtensionStart = ".";
@@ -174,7 +174,6 @@ void parsePGMFile(char *ConvertedPGMFileName, int *height, int *width, int *scal
             line[strcspn(line, "\n")] = '\0'; // Replace any newline char with a terminal char.
             if(!strcmp(expectedFileFormat, line)){
                 printf("error, file is not in P2 format");
-                return 0;
             }
         }
         // For the second row, the number of columns is listed, then the number of rows.
@@ -289,9 +288,9 @@ typedef struct SingleLineInstruction_t{
     float x2, y2;  // end point
 } SingleLineInstruction;
 
-SingleLineInstruction* getContouringCase(cell_t cell){
+// SingleLineInstruction* getContouringCase(cell_t cell){
 
-}
+// }
 
 int main() {
     // 1. take input on image filename
