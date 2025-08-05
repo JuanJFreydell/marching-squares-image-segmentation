@@ -288,7 +288,7 @@ void generateRasterizeCommand(char *outputCommand, size_t commandSize, char *fil
     snprintf(rasterizedSVGFileName, rasterizedSVGFileNameSize, "%sSVGRasterized.png", fileStem);
 
     // Create command. Sample command: "convert -background none image.svg image.png"
-    snprintf(outputCommand, commandSize, "magick -background none %s %s", SVGFileName, rasterizedSVGFileName);
+    snprintf(outputCommand, commandSize, "rsvg-convert %s -o %s", SVGFileName, rasterizedSVGFileName);
 }
 
 int rasterize(char *fileStem, size_t fileStemSize, char *SVGFileName, size_t SVGFileNameSize, char *rasterizedSVGFileName, size_t rasterizedSVGFileNameSize){
