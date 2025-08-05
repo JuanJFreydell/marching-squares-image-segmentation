@@ -5,7 +5,14 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
-            "args": [],
+            "args": [
+                "-g",
+                "main.c",
+                "marchingsquareslib.c",
+                "lookuptablelib.c",
+                "-o",
+                "main"
+            ],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
