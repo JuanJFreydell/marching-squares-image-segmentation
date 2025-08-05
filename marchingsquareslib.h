@@ -61,5 +61,9 @@ int calculateBinaryIndex(int top_left, int top_right, int bottom_right, int bott
 /* Fills the contour cell grid. */
 void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGridHeight, int cellGridWeight);
 
-void writeSVG(cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth);
+/* Helper function to generate a SVG file name. */
+void generateSVGName(char *fileStem, char *outputName);
+
+/* Generates a SVG file by iterating over the contour cell. */
+void writeSVG(char *fileStem, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth);
 #endif

@@ -246,10 +246,18 @@ void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGrid
     }
 }
 
-void writeSVG(cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth){
 
+void generateSVGName(char *fileStem, char *outputName){
+    // Create the file name with the PGM filename
+    strcpy(outputName, fileStem);
+    strcat(outputName, "-lines.svg");
+}
+
+void writeSVG(char *fileStem, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth){
+    char SVGFileName[500] = "";
+    generateSVGName(fileStem, SVGFileName);
     FILE* file;
-    file = fopen("lines.svg", "w");
+    file = fopen(SVGFileName, "w");
     fprintf(file,"<svg height=\"%d\" width=\"%d\" xmlns=\"http://www.w3.org/2000/svg\">\n", cellGridHeight, cellGridWidth);
     cell_t cell;
     Case caseInstance;
@@ -276,3 +284,4 @@ void writeSVG(cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth){
     fprintf(file, "</svg>");
     fclose(file);
 }
+
