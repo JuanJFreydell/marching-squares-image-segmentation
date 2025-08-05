@@ -305,7 +305,7 @@ void writeSVG(char *fileStem, cell_t **contourCellGrid, int cellGridHeight, int 
                 float y1 = caseInstance.sliArray[n].point1.y + cell.y + 0.5;
                 float x2 = caseInstance.sliArray[n].point2.x + cell.x + 0.5;
                 float y2 = caseInstance.sliArray[n].point2.y + cell.y + 0.5;
-                fprintf(file,"\t<line x1=\"%.4f\" y1=\"%.4f\" x2=\"%.4f\" y2=\"%.4f\" style=\"stroke:%s;stroke-width:0.5\" />\n",x1,y1,x2,y2,color);
+                fprintf(file,"\t<line x1=\"%.4f\" y1=\"%.4f\" x2=\"%.4f\" y2=\"%.4f\" style=\"stroke:%s;stroke-width:2\" />\n",x1,y1,x2,y2,color);
             }
         }
     }

@@ -46,19 +46,25 @@ int main() {
     cell_t** cellGrid2 = malloc(contourGridHeight * sizeof(cell_t*));
     cell_t** cellGrid3 = malloc(contourGridHeight * sizeof(cell_t*));
     cell_t** cellGrid4 = malloc(contourGridHeight * sizeof(cell_t*));
+    cell_t** cellGrid5 = malloc(contourGridHeight * sizeof(cell_t*));
+    cell_t** cellGrid6 = malloc(contourGridHeight * sizeof(cell_t*));
 
     for (int row = 0; row < contourGridHeight; row++) {
         cellGrid2[row] = malloc(contourGridWidth * sizeof(cell_t));
         cellGrid3[row] = malloc(contourGridWidth * sizeof(cell_t));
         cellGrid4[row] = malloc(contourGridWidth * sizeof(cell_t));
+        cellGrid5[row] = malloc(contourGridWidth * sizeof(cell_t));
+        cellGrid6[row] = malloc(contourGridWidth * sizeof(cell_t));
     }
 
 
     // 9. Using the normalized grid values, fill the values of the cell grid with each cell's calculated case value. The case value is a bit number calculated from the number of true/false corners.
-    fillCellGrid(normalizedGrid, cellGrid, contourGridHeight, contourGridWidth, 0.5);
-    fillCellGrid(normalizedGrid, cellGrid2, contourGridHeight, contourGridWidth, 0.75);
-    fillCellGrid(normalizedGrid, cellGrid3, contourGridHeight, contourGridWidth, 0.25);
-    fillCellGrid(normalizedGrid, cellGrid4, contourGridHeight, contourGridWidth, 0.05);
+    fillCellGrid(normalizedGrid, cellGrid, contourGridHeight, contourGridWidth, 0.30);
+    fillCellGrid(normalizedGrid, cellGrid2, contourGridHeight, contourGridWidth, 0.40);
+    fillCellGrid(normalizedGrid, cellGrid3, contourGridHeight, contourGridWidth, 0.50);
+    fillCellGrid(normalizedGrid, cellGrid4, contourGridHeight, contourGridWidth, 0.60);
+    fillCellGrid(normalizedGrid, cellGrid5, contourGridHeight, contourGridWidth, 0.70);
+    fillCellGrid(normalizedGrid, cellGrid5, contourGridHeight, contourGridWidth, 0.80);
 
     // 10. Capture the contour grid with the caseValue (binary index values) printed.
     int writeCGridFile = writeContourGridToTxt(fileStem, cellGrid, contourGridHeight, contourGridWidth);
@@ -69,6 +75,9 @@ int main() {
     writeSVG(fileStem, cellGrid2, contourGridHeight, contourGridWidth, SVGFileName, "blue");
     writeSVG(fileStem, cellGrid3, contourGridHeight, contourGridWidth, SVGFileName, "green");
     writeSVG(fileStem, cellGrid4, contourGridHeight, contourGridWidth, SVGFileName, "yellow");
+    writeSVG(fileStem, cellGrid5, contourGridHeight, contourGridWidth, SVGFileName, "orange");
+    writeSVG(fileStem, cellGrid6, contourGridHeight, contourGridWidth, SVGFileName, "purple");
+
 
     // 12. rasterize a file with the svg layer on top of the png file. using magick's command: convert original_image.png contours.svg -layers composite output.png
     char rasterizedSVGFileName[500] = "";
@@ -89,12 +98,14 @@ int main() {
         free(cellGrid2[i]);
         free(cellGrid3[i]);
         free(cellGrid4[i]);
+        free(cellGrid5[i]);
     }
     free(cellGrid);
     free(cellGrid2);
     free(cellGrid3);
     free(cellGrid4);
-
+    free(cellGrid5);
+    free(cellGrid6);
 
     for (int i = 0; i < height; i++){
         free(normalizedGrid[i]);
