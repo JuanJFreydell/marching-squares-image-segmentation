@@ -6,6 +6,7 @@
 
 // Global constants
 #define THRESHOLD 0.5
+#define THRESHOLD_2 0.75
 #define NUM_OF_CONTOUR_CASES 16 // 0 through 15
 extern const char *PGMExtension;
 extern const char *expectedFileFormat;
@@ -59,13 +60,13 @@ float **generateNormalizedGrid(char *ConvertedPGMFileName, int height, int width
 int calculateBinaryIndex(int top_left, int top_right, int bottom_right, int bottom_left);
 
 /* Fills the contour cell grid. */
-void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth);
+void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth, float threshold);
 
 /* Helper function to generate a SVG file name. */
 void generateSVGName(char *fileStem, char *outputName);
 
 /* Generates a SVG file by iterating over the contour cell. */
-void writeSVG(char *fileStem, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth, char *SVGFileName);
+void writeSVG(char *fileStem, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth, char *SVGFileName, char* color);
 
 /* Helper function to generate the rasterize command. */
 void generateRasterizeCommand(char *outputCommand, size_t commandSize, char *fileStem, size_t fileStemSize, char *SVGFileName, size_t SVGFileNameSize, char *rasterizedSVGFileName, size_t rasterizedSVGFileNameSize);

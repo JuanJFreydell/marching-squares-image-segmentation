@@ -221,9 +221,10 @@ int calculateBinaryIndex(int top_left, int top_right, int bottom_right, int bott
     return finalValue;
 }
 
-void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth){
+void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth, float threshold){
     // Set indexes to traverse and access the normalizedGrid. This starts at the top_left corner of each cell.
     int nRow = 0;
+    
 
     for(int row = 0; row < cellGridHeight; row++){
         int nCol = 0; // reset to 0 after each row.
@@ -232,10 +233,10 @@ void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGrid
             int y = row;
 
             // Apply threshold and calculate values.
-            int top_left = (normalizedGrid[nRow][nCol] >= THRESHOLD? 1 : 0);
-            int top_right = (normalizedGrid[nRow][(nCol+1)] >= THRESHOLD? 1 : 0);
-            int bottom_right = (normalizedGrid[(nRow+1)][nCol] >= THRESHOLD? 1 : 0);
-            int bottom_left = (normalizedGrid[(nRow+1)][(nCol+1)] >= THRESHOLD? 1 : 0);
+            int top_left = (normalizedGrid[nRow][nCol] >= threshold? 1 : 0);
+            int top_right = (normalizedGrid[nRow][(nCol+1)] >= threshold? 1 : 0);
+            int bottom_right = (normalizedGrid[(nRow+1)][nCol] >= threshold? 1 : 0);
+            int bottom_left = (normalizedGrid[(nRow+1)][(nCol+1)] >= threshold? 1 : 0);
 
             int caseValue = calculateBinaryIndex(top_left, top_right, bottom_right, bottom_left);
             cell_t cell = {x, y, top_left, top_right, bottom_right, bottom_left, caseValue};
@@ -252,36 +253,68 @@ void generateSVGName(char *fileStem, char *outputName){
     strcat(outputName, "-lines.svg");
 }
 
-void writeSVG(char *fileStem, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth, char *SVGFileName){
-    generateSVGName(fileStem, SVGFileName);
-    FILE* file;
-    file = fopen(SVGFileName, "w");
-    fprintf(file,"<svg height=\"%d\" width=\"%d\" xmlns=\"http://www.w3.org/2000/svg\">\n", cellGridHeight, cellGridWidth);
-    cell_t cell;
-    Case caseInstance;
-    SingleLineInstruction instruction;
-    float x1;
-    float y1;
-    float x2;
-    float y2;
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 
-    for (int i = 0; i < cellGridHeight; i++){
+void writeSVG(char *fileStem, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth, char *SVGFileName, char* color) {
+    generateSVGName(fileStem, SVGFileName);
+
+    FILE* file = fopen(SVGFileName, "r");
+    bool isNewFile = (file == NULL);
+
+    // Temporary buffer to store file content if appending
+    char *existingContent = NULL;
+    long fileSize = 0;
+
+    if (!isNewFile) {
+        fseek(file, 0, SEEK_END);
+        fileSize = ftell(file);
+        rewind(file);
+
+        existingContent = malloc(fileSize + 1);
+        fread(existingContent, 1, fileSize, file);
+        existingContent[fileSize] = '\0';
+        fclose(file);
+
+        // Remove closing </svg>
+        char *svgCloseTag = strstr(existingContent, "</svg>");
+        if (svgCloseTag) {
+            *svgCloseTag = '\0';  // truncate at </svg>
+        }
+    }
+
+    // Re-open the file in write mode to overwrite with modified content
+    file = fopen(SVGFileName, "w");
+
+    if (isNewFile) {
+        fprintf(file, "<svg height=\"%d\" width=\"%d\" xmlns=\"http://www.w3.org/2000/svg\">\n", cellGridHeight, cellGridWidth);
+    } else {
+        fprintf(file, "%s", existingContent);
+        free(existingContent);
+    }
+
+    // Write new line elements
+    for (int i = 0; i < cellGridHeight; i++) {
         for (int j = 0; j < cellGridWidth; j++) {
-            cell = contourCellGrid[i][j];
-            caseInstance = lookupTable[cell.caseValue];
-            for (int n = 0; n < caseInstance.numOfLines; n++){
-                fprintf(file, "{CaseInst NumofLines: %d, LineNum: %d, CaseVal: %d, cell x: %d and j: %d | cell y: %d and i:%d }\n", caseInstance.numOfLines, n, cell.caseValue, cell.x, j, cell.y, i);
-                x1 = caseInstance.sliArray[n].point1.x + cell.x + 0.5;
-                y1 = caseInstance.sliArray[n].point1.y + cell.y + 0.5;
-                x2 = caseInstance.sliArray[n].point2.x + cell.x + 0.5;
-                y2 = caseInstance.sliArray[n].point2.y + cell.y + 0.5;
-                fprintf(file,"\t<line x1=\"%.4f\" y1=\"%.4f\" x2=\"%.4f\" y2=\"%.4f\" style=\"stroke:red;stroke-width:0.5\" />\n",x1,y1,x2,y2);
+            cell_t cell = contourCellGrid[i][j];
+            Case caseInstance = lookupTable[cell.caseValue];
+            for (int n = 0; n < caseInstance.numOfLines; n++) {
+                float x1 = caseInstance.sliArray[n].point1.x + cell.x + 0.5;
+                float y1 = caseInstance.sliArray[n].point1.y + cell.y + 0.5;
+                float x2 = caseInstance.sliArray[n].point2.x + cell.x + 0.5;
+                float y2 = caseInstance.sliArray[n].point2.y + cell.y + 0.5;
+                fprintf(file,"\t<line x1=\"%.4f\" y1=\"%.4f\" x2=\"%.4f\" y2=\"%.4f\" style=\"stroke:%s;stroke-width:0.5\" />\n",x1,y1,x2,y2,color);
             }
         }
     }
+
+    // Close the SVG tag
     fprintf(file, "</svg>");
     fclose(file);
 }
+
 
 void generateRasterizeCommand(char *outputCommand, size_t commandSize, char *fileStem, size_t fileStemSize, char *SVGFileName, size_t SVGFileNameSize, char *rasterizedSVGFileName, size_t rasterizedSVGFileNameSize){
     // Create name for rasterized SVG image

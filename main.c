@@ -43,15 +43,32 @@ int main() {
         cellGrid[row] = malloc((contourGridWidth) * sizeof(cell_t));
     }
 
+    cell_t** cellGrid2 = malloc(contourGridHeight * sizeof(cell_t*));
+    cell_t** cellGrid3 = malloc(contourGridHeight * sizeof(cell_t*));
+    cell_t** cellGrid4 = malloc(contourGridHeight * sizeof(cell_t*));
+
+    for (int row = 0; row < contourGridHeight; row++) {
+        cellGrid2[row] = malloc(contourGridWidth * sizeof(cell_t));
+        cellGrid3[row] = malloc(contourGridWidth * sizeof(cell_t));
+        cellGrid4[row] = malloc(contourGridWidth * sizeof(cell_t));
+    }
+
+
     // 9. Using the normalized grid values, fill the values of the cell grid with each cell's calculated case value. The case value is a bit number calculated from the number of true/false corners.
-    fillCellGrid(normalizedGrid, cellGrid, contourGridHeight, contourGridWidth);
+    fillCellGrid(normalizedGrid, cellGrid, contourGridHeight, contourGridWidth, 0.5);
+    fillCellGrid(normalizedGrid, cellGrid2, contourGridHeight, contourGridWidth, 0.75);
+    fillCellGrid(normalizedGrid, cellGrid3, contourGridHeight, contourGridWidth, 0.25);
+    fillCellGrid(normalizedGrid, cellGrid4, contourGridHeight, contourGridWidth, 0.05);
 
     // 10. Capture the contour grid with the caseValue (binary index values) printed.
     int writeCGridFile = writeContourGridToTxt(fileStem, cellGrid, contourGridHeight, contourGridWidth);
     
     // 11. Write a svg file by iterating over the contour grid. This function uses helper functions that access each cell's caseValue to generate a SVG according to the SingleLineInstruction lookup table.
     char SVGFileName[500] = "";
-    writeSVG(fileStem, cellGrid, contourGridHeight, contourGridWidth, SVGFileName);
+    writeSVG(fileStem, cellGrid, contourGridHeight, contourGridWidth, SVGFileName, "red");
+    writeSVG(fileStem, cellGrid2, contourGridHeight, contourGridWidth, SVGFileName, "blue");
+    writeSVG(fileStem, cellGrid3, contourGridHeight, contourGridWidth, SVGFileName, "green");
+    writeSVG(fileStem, cellGrid4, contourGridHeight, contourGridWidth, SVGFileName, "yellow");
 
     // 12. rasterize a file with the svg layer on top of the png file. using magick's command: convert original_image.png contours.svg -layers composite output.png
     char rasterizedSVGFileName[500] = "";
@@ -67,10 +84,17 @@ int main() {
     }
 
     // 14. Free all mallocs.
-    for(int i = 0; i < contourGridHeight; i++){
+    for (int i = 0; i < contourGridHeight; i++) {
         free(cellGrid[i]);
+        free(cellGrid2[i]);
+        free(cellGrid3[i]);
+        free(cellGrid4[i]);
     }
     free(cellGrid);
+    free(cellGrid2);
+    free(cellGrid3);
+    free(cellGrid4);
+
 
     for (int i = 0; i < height; i++){
         free(normalizedGrid[i]);
