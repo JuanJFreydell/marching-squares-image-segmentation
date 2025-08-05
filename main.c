@@ -50,11 +50,23 @@ int main() {
     int writeCGridFile = writeContourGridToTxt(fileStem, cellGrid, contourGridHeight, contourGridWidth);
     
     // 11. Write a svg file by iterating over the contour grid. This function uses helper functions that access each cell's caseValue to generate a SVG according to the SingleLineInstruction lookup table.
-    writeSVG(fileStem, cellGrid, contourGridHeight, contourGridWidth);
+    char SVGFileName[500] = "";
+    writeSVG(fileStem, cellGrid, contourGridHeight, contourGridWidth, SVGFileName);
 
-    // // 12. rasterize a file with the svg layer on top of the png file. using magick's command: convert original_image.pgm contours.svg -layers composite output.png
-    // void rasterize();
+    // 12. rasterize a file with the svg layer on top of the png file. using magick's command: convert original_image.png contours.svg -layers composite output.png
+    char rasterizedSVGFileName[500] = "";
+    int rasterizeSuccess = rasterize(fileStem, sizeof(fileStem), SVGFileName, sizeof(SVGFileName), rasterizedSVGFileName, sizeof(rasterizedSVGFileName));
+    if(rasterizeSuccess == 0){
+        printf("SVG successfully rasterized.\n");
+    }
 
+    // 13. Overlay the two images together.
+    int overlaySuccess = createFinalOutputImage(fileStem, rasterizedSVGFileName, ImageToConvertFilename);
+    if(rasterizeSuccess == 0){
+        printf("Final output image successfully generated.\n");
+    }
+
+    // 14. Free all mallocs.
     for (int i = 0; i < height; i++) free(normalizedGrid[i]);
     free(normalizedGrid);
 

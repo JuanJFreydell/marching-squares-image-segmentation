@@ -65,5 +65,18 @@ void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGrid
 void generateSVGName(char *fileStem, char *outputName);
 
 /* Generates a SVG file by iterating over the contour cell. */
-void writeSVG(char *fileStem, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth);
+void writeSVG(char *fileStem, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth, char *SVGFileName);
+
+/* Helper function to generate the rasterize command. */
+void generateRasterizeCommand(char *outputCommand, size_t commandSize, char *fileStem, size_t fileStemSize, char *SVGFileName, size_t SVGFileNameSize, char *rasterizedSVGFileName, size_t rasterizedSVGFileNameSize);
+
+/* Rasterizes the SVG file to generate a bitmap image with transparent pixels. */
+int rasterize(char *fileStem, size_t fileStemSize, char *SVGFileName, size_t SVGFileNameSize, char *rasterizedSVGFileName, size_t rasterizedSVGFileNameSize);
+
+/* Helper function to generate the final output name. */
+void generateFinalOutputName(char *fileStem, char *outputName);
+
+/* Generates the final output image.*/
+int createFinalOutputImage(char *fileStem, char *rasterizedSVGFileName, char *ImageToConvertFilename);
+
 #endif

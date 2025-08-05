@@ -246,15 +246,13 @@ void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGrid
     }
 }
 
-
 void generateSVGName(char *fileStem, char *outputName){
     // Create the file name with the PGM filename
     strcpy(outputName, fileStem);
     strcat(outputName, "-lines.svg");
 }
 
-void writeSVG(char *fileStem, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth){
-    char SVGFileName[500] = "";
+void writeSVG(char *fileStem, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth, char *SVGFileName){
     generateSVGName(fileStem, SVGFileName);
     FILE* file;
     file = fopen(SVGFileName, "w");
@@ -285,3 +283,43 @@ void writeSVG(char *fileStem, cell_t **contourCellGrid, int cellGridHeight, int 
     fclose(file);
 }
 
+void generateRasterizeCommand(char *outputCommand, size_t commandSize, char *fileStem, size_t fileStemSize, char *SVGFileName, size_t SVGFileNameSize, char *rasterizedSVGFileName, size_t rasterizedSVGFileNameSize){
+    // Create name for rasterized SVG image
+    snprintf(rasterizedSVGFileName, rasterizedSVGFileNameSize, "%sSVGRasterized.png", fileStem);
+
+    // Create command. Sample command: "convert -background none image.svg image.png"
+    snprintf(outputCommand, commandSize, "magick -background none %s %s", SVGFileName, rasterizedSVGFileName);
+}
+
+int rasterize(char *fileStem, size_t fileStemSize, char *SVGFileName, size_t SVGFileNameSize, char *rasterizedSVGFileName, size_t rasterizedSVGFileNameSize){
+    char rasterizeCommand[2000] = "";
+    generateRasterizeCommand(rasterizeCommand, sizeof(rasterizeCommand), fileStem, fileStemSize, SVGFileName, SVGFileNameSize, rasterizedSVGFileName, rasterizedSVGFileNameSize);
+    int success = system(rasterizeCommand);
+    printf("Running rasterize command for SVG file: %s\n", rasterizeCommand);
+    if (success != 0) {
+        fprintf(stderr, "Error running rasterize command.\n");
+        return 1;
+    }
+    return success;
+}
+
+
+void generateFinalOutputName(char *fileStem, char *finalOutputName){
+     // Create the file name with the PGM filename
+    strcpy(finalOutputName, fileStem);
+    strcat(finalOutputName, "-finalOutput.jpeg");
+}
+
+int createFinalOutputImage(char *fileStem, char *rasterizedSVGFileName, char *ImageToConvertFilename){
+    char finalOutputName[500] = "";
+    generateFinalOutputName(fileStem, finalOutputName);
+    char overLayCommand[500] = "";
+    snprintf(overLayCommand, sizeof(overLayCommand), "magick composite -gravity center %s %s %s", rasterizedSVGFileName, ImageToConvertFilename, finalOutputName);
+    int success = system(overLayCommand);
+    printf("Running overlay command for SVG file: %s\n", overLayCommand);
+    if (success != 0) {
+        fprintf(stderr, "Error running overlay command.\n");
+        return 1;
+    }
+    return success;
+}
