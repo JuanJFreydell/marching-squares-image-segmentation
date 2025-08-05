@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/helena/Desktop/marching-squares-image-segmentation/marchingsquareslib'
+relocations:     []
+...
