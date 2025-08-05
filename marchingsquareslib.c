@@ -245,3 +245,34 @@ void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGrid
         nRow++;
     }
 }
+
+void writeSVG(cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth){
+
+    FILE* file;
+    file = fopen("lines.svg", "w");
+    fprintf(file,"<svg height=\"%d\" width=\"%d\" xmlns=\"http://www.w3.org/2000/svg\">\n", cellGridHeight, cellGridWidth);
+    cell_t cell;
+    Case caseInstance;
+    SingleLineInstruction instruction;
+    float x1;
+    float y1;
+    float x2;
+    float y2;
+
+    for (int i = 0; i < cellGridHeight; i++){
+        for (int j = 0; j < cellGridWidth; j++) {
+            cell = contourCellGrid[i][j];
+            caseInstance = lookupTable[cell.caseValue];
+            for (int n = 0; n < caseInstance.numOfLines; n++){
+                fprintf(file, "{CaseInst NumofLines: %d, LineNum: %d, CaseVal: %d, cell x: %d and j: %d | cell y: %d and i:%d }\n", caseInstance.numOfLines, n, cell.caseValue, cell.x, j, cell.y, i);
+                x1 = caseInstance.sliArray[n].point1.x + cell.x;
+                y1 = caseInstance.sliArray[n].point1.y + cell.y;
+                x2 = caseInstance.sliArray[n].point2.x + cell.x;
+                y2 = caseInstance.sliArray[n].point2.y + cell.y;
+                fprintf(file,"\t<line x1=\"%.4f\" y1=\"%.4f\" x2=\"%.4f\" y2=\"%.4f\" style=\"stroke:red;stroke-width:2\" />\n",x1,y1,x2,y2);
+            }
+        }
+    }
+    fprintf(file, "</svg>");
+    fclose(file);
+}

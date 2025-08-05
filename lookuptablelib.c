@@ -69,7 +69,7 @@ const Case lookupTable[] = {
             {midTop, midBottom}
         }
     },
-    {10, // Case 10
+    {2, // Case 10
         {
             {midLeft, midBottom}, 
             {midTop, midRight}
