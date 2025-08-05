@@ -38,9 +38,9 @@ int main() {
     // 8. generate a "cellGrid" (a 2D array of dimensions Height-1 and Width-1), where each item is a cell_t.
     int contourGridHeight = height-1;
     int contourGridWidth = width-1;
-    cell_t** cellGrid = malloc((contourGridWidth)* sizeof(cell_t*));
+    cell_t** cellGrid = malloc((contourGridHeight)* sizeof(cell_t*));
     for (int row = 0; row < height; row++){
-        cellGrid[row] = malloc((contourGridHeight) * sizeof(cell_t));
+        cellGrid[row] = malloc((contourGridWidth) * sizeof(cell_t));
     }
 
     // 9. Using the normalized grid values, fill the values of the cell grid with each cell's calculated case value. The case value is a bit number calculated from the number of true/false corners.

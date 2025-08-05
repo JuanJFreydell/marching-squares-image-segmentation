@@ -59,7 +59,7 @@ float **generateNormalizedGrid(char *ConvertedPGMFileName, int height, int width
 int calculateBinaryIndex(int top_left, int top_right, int bottom_right, int bottom_left);
 
 /* Fills the contour cell grid. */
-void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGridHeight, int cellGridWeight);
+void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth);
 
 /* Helper function to generate a SVG file name. */
 void generateSVGName(char *fileStem, char *outputName);

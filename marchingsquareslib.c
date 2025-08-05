@@ -76,7 +76,7 @@ int writeContourGridToTxt(char *fileStem, cell_t** contourGrid, int height, int 
     for (int i = 0; i < height; i++){
         fprintf(file, "[");
         for (int j = 0; j < width; j++) {
-            cell_t temp = contourGrid[j][i];
+            cell_t temp = contourGrid[i][j];
             int tempCaseVal = temp.caseValue;
             fprintf(file, " %d ", tempCaseVal);
             // Print another space if the caseValue is a single digit, to keep formatting consistent.
@@ -144,13 +144,13 @@ void parsePGMFile(char *ConvertedPGMFileName, int *height, int *width, int *scal
         }
         // For the second row, the number of columns is listed, then the number of rows.
         if (i == 1){
-            height_temp = strtok(line, " ");
-            width_temp = strtok(NULL,"\n");
+            width_temp = strtok(line, " ");
+            height_temp = strtok(NULL,"\n");
             if(height_temp && width_temp){
-                strcpy(heightStr, height_temp);
-                heightStr[sizeof(heightStr)-1] = '\0';
                 strcpy(widthStr, width_temp);
                 widthStr[sizeof(widthStr)-1] = '\0';
+                strcpy(heightStr, height_temp);
+                heightStr[sizeof(heightStr)-1] = '\0';
             }
         }
         // For the third row, get the scale (the maximum value of a pixel).
@@ -221,13 +221,13 @@ int calculateBinaryIndex(int top_left, int top_right, int bottom_right, int bott
     return finalValue;
 }
 
-void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGridHeight, int cellGridWeight){
+void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGridHeight, int cellGridWidth){
     // Set indexes to traverse and access the normalizedGrid. This starts at the top_left corner of each cell.
     int nRow = 0;
 
     for(int row = 0; row < cellGridHeight; row++){
         int nCol = 0; // reset to 0 after each row.
-        for(int col = 0; col < cellGridWeight; col++){
+        for(int col = 0; col < cellGridWidth; col++){
             int x = col;
             int y = row;
 
@@ -239,7 +239,7 @@ void fillCellGrid(float** normalizedGrid, cell_t **contourCellGrid, int cellGrid
 
             int caseValue = calculateBinaryIndex(top_left, top_right, bottom_right, bottom_left);
             cell_t cell = {x, y, top_left, top_right, bottom_right, bottom_left, caseValue};
-            contourCellGrid[col][row] = cell;
+            contourCellGrid[row][col] = cell;
             nCol++;
         }
         nRow++;
