@@ -21,7 +21,7 @@ int writeNormalizedGridToTxt(char *fileStem, float** normalizedGrid, int height,
     // Open the file and write to it.
     FILE *file = fopen(normalizedGridFileName, "w"); 
     if (file == NULL) {
-        printf("Error opening file");
+        printf("Error opening file.\n\n");
         return 1;
     }
 
@@ -45,7 +45,7 @@ int writeThresholdGridToTxt(char *fileStem, float** normalizedGrid, int height, 
     // Open the file and write to it.
     FILE *file = fopen(normalizedGridFileName, "w"); 
     if (file == NULL) {
-        printf("Error opening file");
+        printf("Error opening file.\n\n");
         return 1;
     }
 
@@ -69,7 +69,7 @@ int writeContourGridToTxt(char *fileStem, cell_t** contourGrid, int height, int 
     // Open the file and write to it.
     FILE *file = fopen(contourGridFileName, "w"); 
     if (file == NULL) {
-        printf("Error opening file");
+        printf("Error opening file.\n\n");
         return 1;
     }
 
@@ -107,13 +107,13 @@ void generatePGMConversionCommand(const char *ImageToConvertFilename, char *Conv
     strncat(ConvertedPGMFileName, PGMExtension, convertedSize - strlen(ConvertedPGMFileName) - 1);
 
     //magick input.jpg -compress none -define pgm:format=plain output.pgm
-    snprintf(pgmCommand, commandSize, "magick %s -resize 256x256\\! -compress none -define pgm:format=plain %s", ImageToConvertFilename, ConvertedPGMFileName);
+    snprintf(pgmCommand, commandSize, "magick %s -compress none -define pgm:format=plain %s", ImageToConvertFilename, ConvertedPGMFileName);
 }
 
 int executePGMCommand(char *convertToPGMCommand){
     int success = system(convertToPGMCommand);
     if (success != 0) {
-        fprintf(stderr, "Error running conversion command.\n");
+        fprintf(stderr, "Error running conversion command.\n\n");
         return 1;
     }
     return success;
@@ -122,7 +122,7 @@ int executePGMCommand(char *convertToPGMCommand){
 void parsePGMFile(char *ConvertedPGMFileName, int *height, int *width, int *scale){
     FILE *file = fopen(ConvertedPGMFileName, "r");
     if (file == NULL){
-        printf("Unable to open converted file %s.", ConvertedPGMFileName);
+        printf("Unable to open converted file %s.\n\n", ConvertedPGMFileName);
         return;
     }
     
@@ -139,7 +139,7 @@ void parsePGMFile(char *ConvertedPGMFileName, int *height, int *width, int *scal
         if (i == 0){
             line[strcspn(line, "\n")] = '\0'; // Replace any newline char with a terminal char.
             if(!strcmp(expectedFileFormat, line)){
-                printf("error, file is not in P2 format");
+                printf("Error: file is not in P2 format.\n\n");
             }
         }
         // For the second row, the number of columns is listed, then the number of rows.
@@ -180,7 +180,7 @@ float **generateNormalizedGrid(char *ConvertedPGMFileName, int height, int width
     FILE *file = fopen(ConvertedPGMFileName, "r");
     if (file == NULL){
         return 0;
-        printf("Unable to open converted file %s.", ConvertedPGMFileName);
+        printf("Unable to open converted file %s.\n\n", ConvertedPGMFileName);
     }
     char line[256];
     for (int skip = 0; skip < 3; skip++){
@@ -271,11 +271,11 @@ void writeSVG(char *fileStem, cell_t **contourCellGrid, int cellGridHeight, int 
             caseInstance = lookupTable[cell.caseValue];
             for (int n = 0; n < caseInstance.numOfLines; n++){
                 fprintf(file, "{CaseInst NumofLines: %d, LineNum: %d, CaseVal: %d, cell x: %d and j: %d | cell y: %d and i:%d }\n", caseInstance.numOfLines, n, cell.caseValue, cell.x, j, cell.y, i);
-                x1 = caseInstance.sliArray[n].point1.x + cell.x;
-                y1 = caseInstance.sliArray[n].point1.y + cell.y;
-                x2 = caseInstance.sliArray[n].point2.x + cell.x;
-                y2 = caseInstance.sliArray[n].point2.y + cell.y;
-                fprintf(file,"\t<line x1=\"%.4f\" y1=\"%.4f\" x2=\"%.4f\" y2=\"%.4f\" style=\"stroke:red;stroke-width:0.1\" />\n",x1,y1,x2,y2);
+                x1 = caseInstance.sliArray[n].point1.x + cell.x + 0.5;
+                y1 = caseInstance.sliArray[n].point1.y + cell.y + 0.5;
+                x2 = caseInstance.sliArray[n].point2.x + cell.x + 0.5;
+                y2 = caseInstance.sliArray[n].point2.y + cell.y + 0.5;
+                fprintf(file,"\t<line x1=\"%.4f\" y1=\"%.4f\" x2=\"%.4f\" y2=\"%.4f\" style=\"stroke:red;stroke-width:0.5\" />\n",x1,y1,x2,y2);
             }
         }
     }
@@ -297,12 +297,11 @@ int rasterize(char *fileStem, size_t fileStemSize, char *SVGFileName, size_t SVG
     int success = system(rasterizeCommand);
     printf("Running rasterize command for SVG file: %s\n", rasterizeCommand);
     if (success != 0) {
-        fprintf(stderr, "Error running rasterize command.\n");
+        fprintf(stderr, "Error running rasterize command.\n\n");
         return 1;
     }
     return success;
 }
-
 
 void generateFinalOutputName(char *fileStem, char *finalOutputName){
      // Create the file name with the PGM filename
@@ -311,14 +310,19 @@ void generateFinalOutputName(char *fileStem, char *finalOutputName){
 }
 
 int createFinalOutputImage(char *fileStem, char *rasterizedSVGFileName, char *ImageToConvertFilename){
+    // Create final output file name.
     char finalOutputName[500] = "";
     generateFinalOutputName(fileStem, finalOutputName);
+
+    // Generate overlay command.
     char overLayCommand[500] = "";
-    snprintf(overLayCommand, sizeof(overLayCommand), "magick composite -gravity center %s %s %s", rasterizedSVGFileName, ImageToConvertFilename, finalOutputName);
+    snprintf(overLayCommand, sizeof(overLayCommand), "magick %s %s -compose over -composite %s", ImageToConvertFilename, rasterizedSVGFileName, finalOutputName);
+    
+    // Run commmand.
     int success = system(overLayCommand);
     printf("Running overlay command for SVG file: %s\n", overLayCommand);
     if (success != 0) {
-        fprintf(stderr, "Error running overlay command.\n");
+        fprintf(stderr, "Error running overlay command.\n\n");
         return 1;
     }
     return success;

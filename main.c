@@ -67,14 +67,18 @@ int main() {
     }
 
     // 14. Free all mallocs.
-    for (int i = 0; i < height; i++) free(normalizedGrid[i]);
-    free(normalizedGrid);
-
-    for (int i = 0; i < height - 1; i++) free(cellGrid[i]);
+    for(int i = 0; i < contourGridHeight; i++){
+        free(cellGrid[i]);
+    }
     free(cellGrid);
 
-    fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
-    fgets(ImageToConvertFilename, sizeof(ImageToConvertFilename), stdin);
+    for (int i = 0; i < height; i++){
+        free(normalizedGrid[i]);
+    }
+    free(normalizedGrid);
+
+    char buf[10];
+    fgets(buf, 10, stdin); // to display all content on screen
 
     return 1;
 }
